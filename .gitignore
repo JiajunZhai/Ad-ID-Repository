@@ -1,0 +1,15 @@
+# 依赖与构建产物
+node_modules/
+dist/
+
+# 运行期数据与缓存（dev server 启动时自动重建）
+data/
+icons/
+
+# 日志与临时文件
+*.log
+.DS_Store
+Thumbs.db
+
+# 业务示例表（含真实数据的样表不入库）
+*.xlsx

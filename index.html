@@ -1,0 +1,67 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%2032%2032%22%3E%3Cdefs%3E%3ClinearGradient%20id%3D%22g%22%20x1%3D%220%22%20y1%3D%220%22%20x2%3D%221%22%20y2%3D%221%22%3E%3Cstop%20offset%3D%220%22%20stop-color%3D%22%23fb923c%22%2F%3E%3Cstop%20offset%3D%221%22%20stop-color%3D%22%23ea580c%22%2F%3E%3C%2FlinearGradient%3E%3C%2Fdefs%3E%3Crect%20x%3D%221%22%20y%3D%221%22%20width%3D%2230%22%20height%3D%2230%22%20rx%3D%228%22%20fill%3D%22url%28%23g%29%22%2F%3E%3Ctext%20x%3D%2216%22%20y%3D%2222%22%20font-family%3D%22Arial%2Csans-serif%22%20font-size%3D%2218%22%20font-weight%3D%22800%22%20fill%3D%22white%22%20text-anchor%3D%22middle%22%3EA%3C%2Ftext%3E%3C%2Fsvg%3E" />
+    <title>Ad ID Warehouse</title>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <div class="app-shell">
+      <aside class="sidebar">
+        <div class="brand">
+          <div class="brand-mark" aria-hidden="true">A</div>
+          <div><strong>AD ID</strong><span>WAREHOUSE</span></div>
+          <span class="version-badge">v2.4</span>
+        </div>
+        <nav aria-label="主导航">
+          <a class="active" href="#" data-navside="warehouse" id="navWarehouse"><span class="nav-icon" aria-hidden="true">▦</span><span class="nav-label">广告位仓库</span></a>
+          <a href="#" data-navside="copy" id="navCopy"><span class="nav-icon" aria-hidden="true">⧉</span><span class="nav-label">复制中心</span></a>
+          <a href="#"><span class="nav-icon" aria-hidden="true">◷</span><span class="nav-label">变更记录</span></a>
+        </nav>
+        <div class="sidebar-foot">
+          <div class="sidebar-foot-left">
+            <span class="status-dot"></span>
+            <span id="syncStatus">本地数据已同步</span>
+          </div>
+          <div class="sidebar-foot-right">
+            <button class="sidebar-icon-btn" title="帮助中心" aria-label="帮助">?</button>
+            <button class="sidebar-icon-btn" id="themeToggle" title="切换明暗主题" aria-label="切换主题">◐</button>
+          </div>
+        </div>
+      </aside>
+
+      <main class="main-content">
+        <header class="topbar compact-topbar">
+          <div class="title-block crumb-block">
+            <nav class="crumb-bar" id="navBar"></nav>
+            <div class="switch-popover" id="switchPopover" hidden></div>
+          </div>
+          <div class="top-actions">
+            <div id="statusCapsule"></div>
+            <label class="global-search" aria-label="全局搜索">
+              <span aria-hidden="true">⌕</span>
+              <input id="search" placeholder="搜索当前视图" />
+              <kbd>Ctrl K</kbd>
+            </label>
+          </div>
+        </header>
+
+        <section class="workspace" id="workspace"></section>
+
+        <footer class="footer">
+          <span>Warehouse </span>
+          <span>快捷键 <kbd>Tab</kbd> 纵向跳转 ID 输入框 · <kbd>↑↓</kbd> 浮层选择 · <kbd>⌘K</kbd> 聚焦搜索</span>
+        </footer>
+      </main>
+    </div>
+
+    <div class="toast" id="toast" role="status" aria-live="polite"></div>
+    <input type="file" id="importFile" accept=".xlsx,.xls" hidden />
+    <div class="import-overlay" id="importOverlay" hidden></div>
+    <div class="paste-popover" id="pastePopover" hidden></div>
+    <div class="app-modal-overlay" id="appModal" hidden></div>
+    <script type="module" src="app.js"></script>
+  </body>
+</html>
