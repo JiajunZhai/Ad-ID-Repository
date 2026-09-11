@@ -12,7 +12,7 @@
 
 本地存储 API（`/api/apps`、`/api/apps/save`、`/api/apps/delete`）与 Google Play 抓取 API（`/api/play/lookup`、`/icons/*`）以 Vite 插件中间件形式实现于 `vite.config.js`，只在 `npm run dev` 时注册。`build` 和 `preview` 都不会注册该中间件。
 
-`load()`（app.js）启动探测：`/api/apps` 成功 → `MODE='server'`（数据写 `data/*.json`，权威）；返回 404/不可达 → `MODE='local'`，读写 `localStorage['adiw.warehouse']`（整库 JSON）。`save()/deleteApp/restoreJSON` 均按 `MODE` 分流。静态模式下 Google Play 抓取/图标/Excel 导入不可用（`lookupBind`/`refreshPlay` 有守卫 toast）。备份迁移用应用列表头部的「⧓ 导出备份 / ⇪ 导入备份」：导出 `{version,exportedAt,apps}` 下载 JSON；导入走 `#importFile`（accept 已含 `.json`）按扩展名分支，覆盖前 confirm。静态模式图标 `<img>`（复制中心 `appIc`、绑定预览 `preview()`）均有 `onerror` 字母徽章兜底。切勿依赖 `index.html` 直开保存。
+`load()`（app.js）启动探测：GitHub Pages（`*.github.io`）与 `file:` 直开 → 直接 `modeLocal()`，**不发 `/api/apps` 请求**（控制台零 404）；其余环境请求 `/api/apps`，成功 → `MODE='server'`（数据写 `data/*.json`，权威），404/非 JSON/异常 → `modeLocal(reason)` 降级，读写 `localStorage['adiw.warehouse']`（整库 JSON）。`save()/deleteApp/restoreJSON` 均按 `MODE` 分流。静态模式下 Google Play 抓取/图标/Excel 导入不可用（`lookupBind`/`refreshPlay` 有守卫 toast），`appIcon`/`appIc` 在 `MODE==='local'` 直接渲字母徽章（不发 `/icons/*` 请求）。备份迁移用应用列表头部的「⧓ 导出备份 / ⇪ 导入备份」：导出 `{version,exportedAt,apps}` 下载 JSON；导入走 `#importFile`（accept 已含 `.json`）按扩展名分支，覆盖前 confirm。切勿依赖 `index.html` 直开保存。GitHub Pages 由 `.github/workflows/deploy.yml` 用 Vite 构建 `dist/` 自动部署（`base:'./'` 相对路径）。
 
 ## 架构
 
@@ -20,7 +20,8 @@
 - `index.html` — 外壳：侧边栏、顶栏（面包屑切换器/进度胶囊）、工作区容器、toast、导入预览浮层、批量粘贴气泡窗（`#pastePopover`）
 - `styles.css` — 全部样式，含手风琴内嵌矩阵 + iOS 风格响应式设计
 - `importer.js` — XLSX 导入核心（纯函数：`parseXlsx`/`buildImportModel`/`applyImport`）
-- `vite.config.js` — Vite 配置 + 通过 `configureServer` 插件实现的本地 JSON 文件 API 与 Google Play 抓取/图标缓存
+- `vite.config.js` — Vite 配置（构建相对 base `'./'`） + 通过 `configureServer` 插件实现的本地 JSON 文件 API 与 Google Play 抓取/图标缓存
+- `.github/workflows/deploy.yml` — GitHub Pages 自动部署：`npm ci && npm run build` 后上传 `dist/`
 - `data/*.json` — 持久化应用数据，每个应用一个 JSON 文件（文件名 = 应用名）
 - `data/play-meta.json` — Google Play 包名 → 商店元数据缓存（防重复抓取）
 - `icons/` — 抓取到的应用图标本地文件缓存（`<包名>.<png|webp|jpg>`），经 `/icons/*` 长缓存（86400s）静态服务

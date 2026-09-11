@@ -106,7 +106,9 @@ Windows 用户也可以双击 `AD ID.bat` 启动。Vite 配置会在服务启动
 npm run build
 ```
 
-构建结果输出到 `dist/`，可直接部署到任意静态托管（推荐 GitHub Pages）。需要注意，生产构建只包含静态前端资源，不包含 `vite.config.js` 中仅供开发服务器使用的本地存储 API —— 部署后的数据读写走浏览器 `localStorage`，首次需要「导出备份 / 导入备份」搬运数据（见「双模式持久化与静态部署」）。
+构建结果输出到 `dist/`，可直接部署到任意静态托管（推荐 GitHub Pages）。仓库已内置 `.github/workflows/deploy.yml`：推送 `main` 自动 `npm ci && npm run build`，并把 `dist/` 发布到 GitHub Pages；构建资源使用相对路径（`base: './'`），任意子路径或自定义域名下均正确。
+
+需要注意，生产构建只包含静态前端资源，不包含 `vite.config.js` 中仅供开发服务器使用的本地存储 API —— 部署后的数据读写走浏览器 `localStorage`，首次需要「导出备份 / 导入备份」搬运数据（见「双模式持久化与静态部署」）。
 
 ### 预览构建结果
 
@@ -142,7 +144,7 @@ data/
 应用启动时自动探测存储模式：
 
 - **开发模式（默认）**：`/api/apps` 可用 → 数据写入 `data/*.json`（权威数据源），完整功能，含 Google Play 抓取与图标缓存。
-- **静态模式**：`/api/apps` 返回 404 或不可达（GitHub Pages、`vite preview`、直接打开静态构建）→ 数据读写浏览器 `localStorage`（键 `adiw.warehouse`），侧边栏同步状态显示「静态模式 · 浏览器本地」。删除/新增/编辑全部可用；但 Google Play 抓取、图标缓存与 Excel 导入不可用（依赖 dev 中间件）。
+- **静态模式**：GitHub Pages（`*.github.io` 域名）与 `file:` 直开会直接进入静态模式（跳过 `/api/apps`，控制台无 404 噪音）；`vite preview` 等其他静态场景在探测 404/非 JSON 后自动降级。数据读写浏览器 `localStorage`（键 `adiw.warehouse`），同步状态显示「静态模式 · 浏览器本地」。删除/新增/编辑/备份迁移全部可用；但 Google Play 抓取、图标缓存与 Excel 导入不可用（依赖 dev 中间件）。无数据时进入「空库」静态模式，新建应用即落 localStorage，无需先导入。
 
 **迁移（dev ⇄ 静态站）**：应用列表头部提供「⧓ 导出备份」与「⇪ 导入备份」。导出生成 `ad-id-warehouse-backup-<日期-时间>.json`；导入支持该备份文件（整体覆盖，需确认），也能接收 `{apps:[...]}` 结构。在 dev 上导出 → 在静态页导入即可搬运数据；反之亦然（静态模式数据单人单浏览器，请勿多人共用）。
 
@@ -241,6 +243,7 @@ Application
 ├── styles.css       # 视觉样式和响应式布局
 ├── importer.js      # Excel 导入解析（纯函数）
 ├── vite.config.js   # Vite 配置及本地 JSON / Play 抓取 / 图标服务 API
+├── .github/workflows/deploy.yml  # GitHub Pages 自动构建部署（dist/）
 ├── data/            # 应用 JSON 数据目录（.gitignore，自动重建）
 ├── icons/           # Google Play 图标缓存（.gitignore，自动重建）
 ├── AGENTS.md        # 开发约定与架构说明

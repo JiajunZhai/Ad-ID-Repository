@@ -73,7 +73,8 @@ async function playLookup(pkg, refresh) {
   }
 }
 
-export default defineConfig({
+export default defineConfig(({ command }) => ({
+  base: command === 'build' ? './' : '/',
   server: {
     port: 3333,
     open: true
@@ -212,4 +213,4 @@ export default defineConfig({
       }
     }
   ]
-});
+}));
