@@ -8,13 +8,15 @@
 
 项目没有 lint、typecheck、测试或格式化脚本，也没有 CI 配置。
 
-## 关键：仅限开发服务器
+## 关键：双模式持久化
 
-本地存储 API（`/api/apps`、`/api/apps/save`、`/api/apps/delete`）与 Google Play 抓取 API（`/api/play/lookup`、`/icons/*`）以 Vite 插件中间件形式实现于 `vite.config.js`，只在 `npm run dev` 时注册。`build` 和 `preview` 都不会注册该中间件——应用无法加载/保存数据。切勿直接打开 `index.html`。
+本地存储 API（`/api/apps`、`/api/apps/save`、`/api/apps/delete`）与 Google Play 抓取 API（`/api/play/lookup`、`/icons/*`）以 Vite 插件中间件形式实现于 `vite.config.js`，只在 `npm run dev` 时注册。`build` 和 `preview` 都不会注册该中间件。
+
+`load()`（app.js）启动探测：`/api/apps` 成功 → `MODE='server'`（数据写 `data/*.json`，权威）；返回 404/不可达 → `MODE='local'`，读写 `localStorage['adiw.warehouse']`（整库 JSON）。`save()/deleteApp/restoreJSON` 均按 `MODE` 分流。静态模式下 Google Play 抓取/图标/Excel 导入不可用（`lookupBind`/`refreshPlay` 有守卫 toast）。备份迁移用应用列表头部的「⧓ 导出备份 / ⇪ 导入备份」：导出 `{version,exportedAt,apps}` 下载 JSON；导入走 `#importFile`（accept 已含 `.json`）按扩展名分支，覆盖前 confirm。静态模式图标 `<img>`（复制中心 `appIc`、绑定预览 `preview()`）均有 `onerror` 字母徽章兜底。切勿依赖 `index.html` 直开保存。
 
 ## 架构
 
-- `app.js` — 整个应用：数据模型、渲染、事件处理、API 调用（50 行，高度压缩）
+- `app.js` — 整个应用：数据模型、渲染、事件处理、API 调用、双模式持久化（`MODE`/`localStorage['adiw.warehouse']`）与 JSON 备份迁移（50 行，高度压缩）
 - `index.html` — 外壳：侧边栏、顶栏（面包屑切换器/进度胶囊）、工作区容器、toast、导入预览浮层、批量粘贴气泡窗（`#pastePopover`）
 - `styles.css` — 全部样式，含手风琴内嵌矩阵 + iOS 风格响应式设计
 - `importer.js` — XLSX 导入核心（纯函数：`parseXlsx`/`buildImportModel`/`applyImport`）
@@ -53,7 +55,7 @@
 - API 无鉴权，仅限可信的本机开发环境
 - **应用名 = 文件名**（`data/` 下）——避免操作系统不允许的字符；同名会覆盖
 - **自动保存**：eCPM 与 ID 输入约 1 秒（`schedule`，`app.js:13`）防抖后 POST 到 `/api/apps/save`
-- **Google Play 抓取**：`google-play-scraper`（默认 `gplay.app` 自带无内存在线缓存）仅由 `vite.config.js` 的服务端中间件调用；`data/play-meta.json` + `icons/` 是唯一持久缓存层，列表加载绝不并发请求 Play（防限流/CORS）。`?refresh=1` 跳过 meta 缓存强制重抓。图标 URL 尺寸段（`=w…h…`）裁剪后以 `=w512-h512-rw` 下载，魔数识别 `png/webp/jpg` 落盘。404/网络失败写 `{found:false}` 防重复打接口。包名前缀双字母（`pvOf`）作为 `err` 态占位，字号 13px 且不可去除内描边（防白图标融色）。
+- **Google Play 抓取**：`google-play-scraper`（默认 `gplay.app` 自带无内存在线缓存）仅由 `vite.config.js` 的服务端中间件调用；`data/play-meta.json` + `icons/` 是唯一持久缓存层，列表加载绝不并发请求 Play（防限流/CORS）。`?refresh=1` 跳过 meta 缓存强制重抓。图标 URL 尺寸段（`=w…h…`）裁剪后以 `=w512-h512-rw` 下载，魔数识别 `png/webp/jpg` 落盘。404 确认不算命中时写 `{found:false}` 防重复打接口（瞬态 5xx/限流只返回不落盘，`msg` 字段留存原因可重试）。**包名接受完整 Play 商店链接**：`pkgOf`（app.js）与 `safePkg`（vite.config.js）先匹配 `[?&]id=` 提取真实包名，再校验点号结构且拒绝含 `https`/`storeapps`/`playgoogle` 的伪 URL 串，非法即拒绝（客户端 toast 提示，服务端回 400，均不写缓存）——防止把链接当包名抓取出垃圾缓存。包名前缀双字母（`pvOf`）作为 `err` 态占位，字号 13px 且不可去除内描边（防白图标融色）。
 - **Vite 版本**：`package.json` 声明 `^5.0.0`。2026-09 已装 `google-play-scraper@10.1.3` 时 lockfile 重算，vite 稳定到 `5.4.21`（与声明一致）——重新 `npm install` 需保持该版本一致，勿混入 8.x
 - `app.js` 通过 `<script type="module">` 作为单模块脚本加载——无打包器转换、无 JSX、无 TypeScript
 - 界面语言为中文（zh-CN）

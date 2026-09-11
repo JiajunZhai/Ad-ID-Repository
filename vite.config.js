@@ -12,7 +12,12 @@ const readMeta = () => {
   try { return JSON.parse(fs.readFileSync(META_FILE, 'utf-8')); } catch { return {}; }
 };
 const writeMeta = (m) => fs.writeFileSync(META_FILE, JSON.stringify(m, null, 2), 'utf-8');
-const safePkg = (p) => String(p || '').trim().toLowerCase().replace(/[^a-z0-9._-]/g, '');
+const safePkg = (p) => {
+  const s = String(p || '').trim();
+  const m = s.match(/[?&]id=([a-zA-Z0-9._-]+)/);
+  const cand = (m ? m[1] : s.replace(/[^a-zA-Z0-9._-]/g, '')).toLowerCase();
+  return /^[a-zA-Z][a-zA-Z0-9._-]*\.[a-zA-Z0-9._-]+$/.test(cand) && !/https|storeapps|playgoogle|play\.google/i.test(cand) ? cand : '';
+};
 const imageExt = (b) => {
   const d = new Uint8Array(b);
   if (d[0] === 0x89 && d[1] === 0x50 && d[2] === 0x4e && d[3] === 0x47) return 'png';
@@ -58,8 +63,12 @@ async function playLookup(pkg, refresh) {
     const msg = String((err && (err.message || err)) || '');
     const notFound = /404|not.?found|not in|does not/i.test(msg);
     const entry = { pkg, found: false, title: null, dev: null, genre: null, icon: null, state: 'err', msg: notFound ? null : msg, at: Date.now() };
-    meta[pkg] = entry;
-    writeMeta(meta);
+    if (notFound) {
+      meta[pkg] = entry;
+      writeMeta(meta);
+    } else {
+      console.error(`[play] 抓取失败 ${pkg}（瞬态，不缓存）:`, msg);
+    }
     return { ...entry, cached: false };
   }
 }
