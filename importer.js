@@ -25,8 +25,9 @@ export function inferType(code) {
   return key ? { key, name: TYPE_NAMES[key] } : null;
 }
 export function makeAdName(appName, platform, code, group, tier, floor) {
+  // 流量分组作为完整名称保留内部空格，仅在字段之间添加下划线。
   return [appName, platform, code, group, tier, floor]
-    .map(x => String(x).trim().replace(/\s+/g, '_').replace(/[^a-zA-Z0-9_\u4e00-\u9fff.-]/g, ''))
+    .map((x, i) => i === 3 ? String(x ?? '').trim() : String(x).trim().replace(/\s+/g, '_').replace(/[^a-zA-Z0-9_\u4e00-\u9fff.-]/g, ''))
     .filter(Boolean).join('_');
 }
 
