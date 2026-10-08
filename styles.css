@@ -397,9 +397,10 @@ html.dark .id-mini-bar i { background: var(--brand-dark); }
   transform: translateX(4px); transition: opacity .18s ease, transform .18s ease, background .15s, color .15s;
 }
 .data-row:hover .action-icon { opacity: 1; transform: none; }
+.accordion-row:hover .action-icon, .accordion-row:focus-within .action-icon { opacity: 1; transform: none; }
 .action-icon:hover { background: var(--brand-soft); color: var(--brand); }
-.action-icon[data-delete-app]:hover, .action-icon[data-delete-placement]:hover { background: #fef2f2; color: var(--danger); }
-html.dark .action-icon[data-delete-app]:hover, html.dark .action-icon[data-delete-placement]:hover { background: rgba(239,68,68,.12); }
+.action-icon[data-delete-app]:hover, .action-icon[data-delete-placement]:hover, .action-icon[data-delete-segment]:hover { background: #fef2f2; color: var(--danger); }
+html.dark .action-icon[data-delete-app]:hover, html.dark .action-icon[data-delete-placement]:hover, html.dark .action-icon[data-delete-segment]:hover { background: rgba(239,68,68,.12); }
 .row-arrow {
   margin-left: 4px; color: #94a3b8; opacity: 0; transition: transform .16s ease, color .16s ease, opacity .18s;
 }
