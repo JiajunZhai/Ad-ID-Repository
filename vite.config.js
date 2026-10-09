@@ -81,6 +81,17 @@ export default defineConfig(({ command }) => ({
   },
   plugins: [
     {
+      name: 'ad-id-static-icons',
+      closeBundle() {
+        if (command !== 'build' || !fs.existsSync(iconsDir)) return;
+        const target = path.resolve(rootDir, 'dist', 'icons');
+        fs.mkdirSync(target, { recursive: true });
+        for (const file of fs.readdirSync(iconsDir)) {
+          if (/\.(png|webp|jpe?g)$/i.test(file)) fs.copyFileSync(path.join(iconsDir, file), path.join(target, file));
+        }
+      }
+    },
+    {
       name: 'ad-id-local-storage-plugin',
       configureServer(server) {
         // data 与 icons 缓存目录

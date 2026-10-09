@@ -351,6 +351,7 @@ html.dark .app-icon .ir-shimmer { background: linear-gradient(100deg, transparen
 .app-name-line { display: flex; align-items: baseline; gap: 7px; min-width: 0; }
 .app-name-line strong { font-size: 15px; font-weight: 700; line-height: 1.2; color: var(--text); white-space: nowrap; }
 .app-title { font-style: normal; color: var(--muted); font-size: 13px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: min(340px, 46vw); cursor: default; }
+.app-dev { color: var(--muted); font-size: 11px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: min(340px, 46vw); }
 .app-pkg { display: flex; align-items: center; gap: 6px; min-width: 0; }
 .app-pkg .pkg-text { font: 11px var(--mono); color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 260px; }
 .app-pkg .muted { font-size: 11px; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 180px; }
@@ -753,6 +754,13 @@ html.dark .pv-letter { color: #fdba74; background: rgba(251,146,60,.18); }
   .footer { left: 0; }
 }
 @media (max-width: 600px) {
+  .apps-surface .surface-head { align-items: flex-start; flex-direction: column; gap: 10px; }
+  .apps-surface .head-actions { width: 100%; overflow-x: auto; padding-bottom: 2px; }
+  .apps-surface .head-actions .text-action, .apps-surface .head-actions .primary-btn { flex: 0 0 auto; }
+  .apps-surface .table-scroll { margin: 0 -1px; }
+  .apps-surface .app-name-line { align-items: flex-start; flex-direction: column; gap: 2px; }
+  .apps-surface .app-title, .apps-surface .app-dev { max-width: 44vw; }
+  .apps-surface .row-actions { justify-content: flex-start; }
   .draft-row .submit-badge { min-width: 72px; }
   .inline-add small { display: none; }
   .cap-nums { font-size: 11px; }

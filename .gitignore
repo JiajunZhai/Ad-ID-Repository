@@ -2,9 +2,15 @@
 node_modules/
 dist/
 
-# 运行期数据与缓存（dev server 启动时自动重建）
+# 运行期数据（dev server 启动时自动重建）
 data/
-icons/
+
+# Google Play 图标缓存会随静态构建发布；仅跟踪图片文件
+icons/*
+!icons/*.png
+!icons/*.webp
+!icons/*.jpg
+!icons/*.jpeg
 
 # 日志与临时文件
 *.log
