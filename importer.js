@@ -1,5 +1,5 @@
 // importer.js — XLSX 导入解析与合并（纯函数，零依赖，Node/浏览器通用）
-export const RATIO = { L: 1.15, H: 1.35, M: 1.8 };
+export const RATIO = { L: 1.35, H: 1.55, M: 1.85 };
 const TIERS = ['L', 'H', 'M'];
 const TYPE_NAMES = { rewarded: '激励视频', interstitial: '插屏', banner: '横幅', appopen: '开屏', native: '原生' };
 export function round2(n) { return Math.round((n + Number.EPSILON) * 100) / 100; }
@@ -100,12 +100,12 @@ function resolveLetters(header) {
 const num = v => { if (v == null || String(v).trim() === '') return null; const n = parseFloat(String(v).replace(/[¥$,\s]/g, '')); return isNaN(n) ? null : n; };
 
 export function buildImportModel(rows, typeMap = {}) {
-  const L = resolveLetters(rows[0]), cell = (r, k) => String(r[L[k]] ?? '').trim(), entries = [];
+  const L = resolveLetters(rows[0]), cell = (r, k) => String(r[L[k]] ?? '').trim(), entries = [], skipped = [];
   const link = (appName, code) => entries.find(e => e.app === appName && e.code === code);
   for (let i = 1; i < rows.length; i++) {
     const r = rows[i], appName = cell(r, 'app'), code = cell(r, 'code'), group = cell(r, 'group'), pf = cell(r, 'platform'), pTokens = pf.split(/[,，、/;；]+/).map(t => t.trim()).filter(Boolean), platform = pTokens[0] ?? pf, eCPM = num(cell(r, 'ecpm'));
-    if (!appName || !code || !group) { continue; }
-    if (eCPM == null) { continue; }
+    if (!appName || !code || !group) { skipped.push({ row: i + 1, kind: 'missingKey', app: appName, code, group, message: '应用、广告位代码或价值分组缺失' }); continue; }
+    if (eCPM == null) { skipped.push({ row: i + 1, kind: 'invalidEcpm', app: appName, code, group, message: '参考 eCPM 缺失或不是有效数字' }); continue; }
     const oKey = `${appName}|${code}`, overrideT = typeMap[oKey], type = inferType(code) ?? (overrideT ? { key: overrideT, name: TYPE_NAMES[overrideT] } : null);
     let e = link(appName, code);
     if (!e) { e = { app: appName, code, platform, platformOptions: pTokens.length > 1 ? pTokens : null, type, typeKey: type?.key, typeName: type?.name, unknown: !type, segments: [] }; entries.push(e); }
@@ -134,7 +134,7 @@ export function buildImportModel(rows, typeMap = {}) {
       }
     }
   }
-  return { entries, mismatches, nameMismatches, unknown };
+  return { entries, mismatches, nameMismatches, unknown, skipped };
 }
 
 // ---------------- 合并（按组更新） ----------------

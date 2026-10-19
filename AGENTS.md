@@ -8,13 +8,13 @@
 
 * `npm run preview` — 预览构建结果（不包含 API 中间件）
 
-项目没有 lint、typecheck、测试或格式化脚本，也没有 CI 配置。
+项目没有 lint、typecheck、测试或格式化脚本；`.github/workflows/deploy.yml` 是 GitHub Pages 构建部署工作流。
 
 ## 关键:双模式持久化
 
 本地存储 API（`/api/apps`、`/api/apps/save`、`/api/apps/delete`）与 Google Play 抓取 API（`/api/play/lookup`、`/icons/*`）以 Vite 插件中间件形式实现于 `vite.config.js`，只在 `npm run dev` 时注册。`build` 和 `preview` 都不会注册该中间件。
 
-`load()`（app.js）启动探测:GitHub Pages（`*.github.io`）与 `file:` 直开 → 直接 `modeLocal()`，**不发** **`/api/apps`** **请求**（控制台零 404）；其余环境请求 `/api/apps`，成功 → `MODE='server'`（数据写 `data/*.json`，权威），404/非 JSON/异常 → `modeLocal(reason)` 降级，读写 `localStorage['adiw.warehouse']`（整库 JSON）。`save()/deleteApp/restoreJSON` 均按 `MODE` 分流。静态模式下 Google Play 抓取/图标/Excel 导入不可用（`lookupBind`/`refreshPlay` 有守卫 toast），`appIcon`/`appIc` 在 `MODE==='local'` 直接渲字母徽章（不发 `/icons/*` 请求）。备份迁移用应用列表头部的「⧓ 导出备份 / ⇪ 导入备份」:导出 `{version,exportedAt,apps}` 下载 JSON；导入走 `#importFile`（accept 已含 `.json`）按扩展名分支，覆盖前 confirm。切勿依赖 `index.html` 直开保存。GitHub Pages 由 `.github/workflows/deploy.yml` 用 Vite 构建 `dist/` 自动部署（`base:'./'` 相对路径）。
+`load()`（app.js）启动探测:GitHub Pages（`*.github.io`）与 `file:` 直开 → 直接 `modeLocal()`，**不发** **`/api/apps`** **请求**（控制台零 404）；其余环境请求 `/api/apps`，成功 → `MODE='server'`（数据写 `data/*.json`，权威），404/非 JSON/异常 → `modeLocal(reason)` 降级，读写 `localStorage['adiw.warehouse']`（整库 JSON）。`save()/deleteApp/restoreJSON` 均按 `MODE` 分流。静态模式下 Google Play 在线抓取与 Excel 导入不可用（`lookupBind`/`refreshPlay` 有守卫 toast）；构建时已复制到 `dist/icons/` 的缓存图标仍可通过 `import.meta.env.BASE_URL` 相对路径显示。备份迁移用应用列表头部的「⧓ 导出备份 / ⇪ 导入备份」:导出 `{version,exportedAt,apps}` 下载 JSON；导入走 `#importFile`（accept 已含 `.json`）按扩展名分支，覆盖前 confirm。切勿依赖 `index.html` 直开保存。GitHub Pages 由 `.github/workflows/deploy.yml` 用 Vite 构建 `dist/` 自动部署（`base:'./'` 相对路径）。
 
 ## 架构
 
@@ -38,7 +38,7 @@
 
 ## 数据模型
 
-`Application → Format → Placement → Segment → ID Config`（四级层级）。ID 通过 `app.js:3` 的基于时间戳的 `uid()` 生成。`app.js:10` 的 `calc()` 为锁定项重算 `floorPrice` 与 `adName`；底价按组标识倍率计算（L×1.15 / H×1.35 / M×1.8）。ID Config 另有运营状态字段 `opState`（`OPST` 四态）:`running`=🟢运行中 / `mediation`=🟠中介组未建 / `meta`=🟣Meta未建 / **缺省或** **`idle`=⚪未创建**（零迁移）。
+`Application → Format → Placement → Segment → ID Config`（四级层级）。ID 通过 `app.js` 的基于时间戳的 `uid()` 生成。`calc()` 为锁定项重算 `floorPrice` 与 `adName`；底价按组标识倍率计算（L×1.35 / H×1.55 / M×1.85），倍率从 `importer.js` 的 `RATIO` 统一导入。ID Config 另有运营状态字段 `opState`（`OPST` 四态）:`running`=🟢运行中 / `mediation`=🟠中介组未建 / `meta`=🟣Meta未建 / **缺省或** **`idle`=⚪未创建**（零迁移）。
 
 应用另有 Google Play 关联字段（可选）:`pkg`（包名，同时作为图标缓存文件名）、`title`（商店真实名称）、`dev`/`genre`（开发者/分类，写回缓存）、`icon`（本地图标文件名 `icons/<pkg>.<ext>`）、`iconState`（`ok`=图标就绪 / `err`=商店未找到或下载失败 / 缺字段=未绑定）。历史应用无这些字段，按“未绑定”渲染，零迁移。
 
@@ -72,7 +72,9 @@
 
 * 快捷键:`Ctrl+K`/`Cmd+K` 聚焦搜索、`Alt+1` 直达应用列表、`Enter` 提交草稿、`Esc` 关闭批量粘贴气泡窗 / 取消草稿 / 关闭绑定浮层 / 关闭导入浮层 / 关闭切换浮层 / **逐级上跳**（`placement→app→apps`）、气泡窗内 `Ctrl+Enter` 确认回填。
 
-* **Google Play 绑定（`appIcon`** **+** **`#appModal`）**:应用列表第一列＝图标四态（`ok`=真实图标 / `err`=双字母前缀＋hover“未在 Play 商店找到该应用” / `none`=虚线 `＋` 开绑定弹窗 / 加载中 shimmer）。行内信息流＝代号粗体＋商店真实名（省略）＋包名（mono，hover 出 `📋` 复制）。操作列 `✏️` 绑定/更改包名、`🔄` 刷新商店数据（`?refresh=1` 强制抓取）、`⧉/×/→` 保留。绑定弹窗中包名输入 blur/Enter 触发抓取预览（图标＋标题＋开发者＋分类），提交写回应用数据并保存。图标框 hover 微放大＋右下 `↗` 开 Play 详情页。新建应用仍走行内草稿，弹窗仅服务绑定/改包名。
+* **Google Play 绑定（`appIcon`** **+** **`#appModal`）**:应用列表第一列＝图标四态（`ok`=真实图标 / `err`=双字母前缀＋hover“未在 Play 商店找到该应用” / `pending`=已保存包名、待抓取 / `none`=虚线 `＋` 开绑定弹窗 / 加载中 shimmer）。行内信息流＝代号粗体＋商店真实名（省略）＋包名（mono，hover 出 `📋` 复制）。操作列 `✏️` 绑定/更改包名、`🔄` 刷新商店数据（`?refresh=1` 强制抓取）、`⧉/×/→` 保留。绑定弹窗中包名输入 blur/Enter 触发抓取预览（图标＋标题＋开发者＋分类），提交写回应用数据并保存。图标框 hover 微放大＋右下 `↗` 开 Play 详情页。创建应用面板可选填包名，独立绑定弹窗继续服务后续绑定和刷新。
+
+* **统一创建/编辑面板（`state.editor` + `#editorOverlay`）**:应用、广告位和流量分组的创建/编辑使用桌面右侧抽屉、移动端全屏面板，不再通过表格草稿行或浏览器 `prompt()` 进入。新建广告位仅平铺 `Inter/Navite/Open`（内部 `interstitial/native/appopen`）和 `Admob/TradPlus/Topon` 标签；同时创建初始流量分组，参考 eCPM 允许合法的 0，并实时预览 L/H/M 底价。历史 Rewarded/Banner 或其他平台值在编辑时作为“历史选项”保留。面板支持字段级校验、未保存放弃提示、`Ctrl/Cmd+Enter` 提交、`Esc` 关闭和焦点返回。
 
 ## 注意事项
 
